@@ -1,0 +1,124 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html" />
+	<meta name="author" content="" />
+ <meta name="viewport"content="width=device-width, initial-scale=1.0"> 
+	<title>Tetrix</title>
+</head>
+
+
+<body style="background-color: white;">
+
+</body>
+<script type="text/javascript">
+var dot = function(tetrix){
+    this.tetrix = tetrix;
+    this.width = 10;
+    this.height = 10;
+    this.value = 0
+    
+    this.draw = function(){
+        
+    }
+}
+var shappe = function(tetrix){
+    this.tetrix = tetrix;
+    this.col = 3;
+    this.row = 0;
+    this.data = [[]];
+    
+    this.rotate = function(){
+        
+    }
+    this.create = function(){
+        
+    }
+}
+var board = function(tetrix){
+    this.tetrix = tetrix;
+    this.numRows = 20;
+    this.numCols = 10;
+    this.data = [[]];
+    this.width = 100;
+    this.height = 100;
+    
+    this.init = function(){
+        this.width = this.tetrix.canvas.width;
+        this.createData();
+    }
+    
+    this.createData = function(){
+        for (var row = 0; row < this.numRows + 4; row++){
+            this.data[row] = [];
+            for (col = 0; col < this.numCols; col++){
+                this.data[row][col] = 0;
+            }
+        }
+    }
+}
+
+var tetrix = function(){
+    this.canvas = null;
+    this.ctx = null;
+    this.board = null;
+    
+    this.score = 0;
+    this.gameSize = 100;
+    
+    this.init = function(){
+        this.getGameSize();
+        this.createCanvas();
+        this.fullScreen();
+    }
+    
+    this.createBoard = function(){
+        this.board = new board(this);
+        this.board.init();
+    }
+    
+    this.getGameSize = function(){
+        this.gameSize = window.innerHeight;
+        if (this.gameSize < window.innerWidth){
+            this.gameSize = window.innerWidth;
+        }
+        console.log(this.gameSize);
+    }
+    
+    this.createCanvas = function(){
+        this.canvas = document.createElement('canvas');
+        this.canvas.width = this.gameSize / 2;
+        this.canvas.height = this.gameSize;
+        document.body.appendChild(this.canvas);
+    }
+    
+    this.fullScreen = function(){
+        if (this.canvas.requestFullscreen) {
+        	this.canvas.requestFullscreen();
+        } else if (this.canvas.webkitRequestFullscreen) {
+        	this.canvas.webkitRequestFullscreen();
+        } else if (i.mozRequestFullScreen) {
+        	this.canvas.mozRequestFullScreen();
+        } else if (this.canvas.msRequestFullscreen) {
+        	this.canvas.msRequestFullscreen();
+        }
+    }
+    
+    this.start = function(){
+        
+    }
+    this.loop = function(){
+        
+    }
+}
+var game = new tetrix();
+function play(){
+    game.init();
+}
+</script>
+
+<br />
+<button onclick="play();">Play</button>
+
+</html>

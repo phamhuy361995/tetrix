@@ -1,0 +1,529 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html" />
+	<meta name="author" content="" />
+ <meta name="viewport"content="width=device-width, initial-scale=1.0"> 
+	<title>Tetrix</title>
+    <style type="text/css">
+canvas {
+background-color: white;
+}
+    </style>
+
+</head>
+
+
+<body style="background-color: black;">
+
+</body>
+<script type="text/javascript">
+var square = function(tetrix, row, col){
+    this.tetrix = tetrix;
+    this.row = row;
+    this.col = col;
+    this.size = Math.ceil(this.tetrix.board.width / this.tetrix.board.numCols);
+    this.x = 0;
+    this.y = 0;
+    
+    this.draw = function(){
+        if (this.row > 3){
+            this.calculatePosition();
+            this.tetrix.ctx.fillStyle = "#ff0000";
+            this.tetrix.ctx.fillRect(this.x + 1, this.y + 1,this.size - 2, this.size - 2);
+        }        
+    }
+
+    this.calculatePosition = function(){
+        this.x = this.tetrix.board.x + this.size * this.col;
+        this.y = this.tetrix.board.y + this.size * (this.row - 4);
+    }
+
+    this.canMoveLeft = function(){
+        if (this.col > 0){
+            if (this.tetrix.board.data[this.row][this.col - 1] != null){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    this.canMoveRight = function(){
+        if (this.col < this.tetrix.board.numRows){
+            if (this.tetrix.board.data[this.row][this.col + 1] != null){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    this.canMoveDown = function(){
+        if (this.row < this.tetrix.board.numRows + 3) {
+            if (this.tetrix.board.data[this.row + 1][this.col] != null){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    this.moveLeft = function(){
+        this.col = this.col - 1;
+    }
+
+    this.moveRight = function(){
+        this.col = this.col + 1;
+    }
+
+    this.moveDown = function(){
+        this.row = this.row + 1;
+    }
+
+}
+var brick = function(tetrix){
+    this.tetrix = tetrix;
+    this.row = 0;
+    this.col = 3;
+
+    this.data = [[]];
+    
+    this.baseData = [
+                        [
+                            [1,1,1,1]
+                        ],
+                        [
+                            [1,1,1],
+                            [0,1,0]
+                        ],
+                        [
+                            [1,1],
+                            [1,1]
+                        ],
+                        [
+                            [1,1],
+                            [1,0],
+                            [1,0]
+                        ],
+                        [
+                            [1,1],
+                            [0,1],
+                            [0,1]
+                        ],
+                        [
+                            [1,1,0],
+                            [0,1,1]
+                        ],
+                        [
+                            [0,1,1],
+                            [1,1,0]
+                        ]
+                     ];
+
+    this.createData = function(){
+        var numberData = this.baseData[Math.floor(Math.random() * this.baseData.length)];
+
+        for (var i = 0; i < numberData.length; i++) {
+            this.data[i] = [];
+            for (var j = 0; j < numberData[0].length; j++) {
+                if (numberData[i][j] == 1){
+                    this.data[i][j] = new square(this.tetrix, this.row + i, this.col + j);
+                }
+                else {
+                    this.data[i][j] = null;
+                }
+            };
+        };
+        
+    }
+
+    this.rotate = function(){
+        var newBrick = [[]];
+        for (var i = 0; i < this.data[0].length; i++){
+            newBrick[i] = [];
+            var k = 0;
+            for (var j = this.data.length - 1; j >= 0; j--){
+                newBrick[i][k] = this.data[j][i];
+                k += 1;
+            }
+        }
+
+        for (var row = 0; row < newBrick.length; row++){
+            for (var col = 0; col < newBrick[0].length; col++){
+                if (newBrick[row][col] != null){
+                    newBrick[row][col].row = this.row + row;
+                    newBrick[row][col].col = this.col + col;
+                }
+            }
+        }
+        if (this.validNewBrick(newBrick)){
+            this.data = newBrick;
+        }
+
+    }
+
+    this.validNewBrick = function(brickData){
+        if (this.col + brickData[0].length > this.tetrix.board.numCols - 1){
+            return false;
+        }
+        for (var i = 0; i < brickData.length; i++){
+            for (j = 0; j < brickData[0].length; j++){
+                if (brickData[i][j] != null){
+                    if (this.tetrix.board.data[this.row + i][this.col + j] != null){
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    this.draw = function(){
+
+        for (var i = 0; i < this.data.length; i++) {
+            for (var j = 0; j < this.data[0].length; j++) {
+
+                if (this.data[i][j] != null){
+
+                    this.data[i][j].draw();
+                }
+            };
+        };
+    }
+
+    this.canMoveLeft = function(){
+        if (this.hitLeft()){
+            return false;
+        }
+        for (var i = 0; i < this.data.length; i++) {
+            for (var j = 0; j < this.data[0].length; j++) {
+                if (this.data[i][j] != null){                    
+                    if ( ! this.data[i][j].canMoveLeft()){
+                        return false;
+                    }
+                }
+            };
+        };
+        return true;
+    }
+
+    this.hitLeft = function(){
+        if (this.col == 0){
+            return true;
+        }
+        return false;
+    }
+
+    this.moveLeft = function(){
+        if (this.canMoveLeft()){
+            this.col = this.col - 1;
+            for (var i = 0; i < this.data.length; i++) {
+                for (var j = 0; j < this.data[0].length; j++) {
+                    if (this.data[i][j] != null){                    
+                        this.data[i][j].moveLeft();
+                    }
+                };
+            };
+        }
+    }
+
+    this.canMoveRight = function(){
+        if (this.hitRight()){
+            return false;
+        }
+        for (var i = 0; i < this.data.length; i++) {
+            for (var j = 0; j < this.data[0].length; j++) {
+                if (this.data[i][j] != null){                    
+                    if ( ! this.data[i][j].canMoveRight()){
+                        return false;
+                    }
+                }
+            };
+        };
+        return true;
+    }
+
+    this.hitRight = function(){
+        if (this.col + this.data[0].length == this.tetrix.board.numCols){
+            return true;
+        }
+        return false;
+    }
+
+    this.moveRight = function(){
+        if (this.canMoveRight()){
+            this.col = this.col + 1;
+            for (var i = 0; i < this.data.length; i++) {
+                for (var j = 0; j < this.data[0].length; j++) {
+                    if (this.data[i][j] != null){                    
+                        this.data[i][j].moveRight();
+                    }
+                };
+            };
+        }
+    }
+
+    this.hitBottom = function(){
+        if (this.row + this.data.length == this.tetrix.board.numRows + 4){
+            return true;
+        }
+        return false;
+    }
+
+    
+
+    this.canMoveDown = function(){
+        if (this.hitBottom()){
+            return false;
+        }
+        for (var i = 0; i < this.data.length; i++) {
+            for (var j = 0; j < this.data[0].length; j++) {
+                if (this.data[i][j] != null){                    
+                    if ( ! this.data[i][j].canMoveDown()){
+                        return false;
+                    }
+                }
+            };
+        };
+        return true;
+    }
+
+    this.canMoveLeft = function(){
+        if (this.hitLeft()){
+            return false;
+        }
+        for (var i = 0; i < this.data.length; i++) {
+            for (var j = 0; j < this.data[0].length; j++) {
+                if (this.data[i][j] != null){                    
+                    if ( ! this.data[i][j].canMoveLeft()){
+                        return false;
+                    }
+                }
+            };
+        };
+        return true;
+    }
+    this.fall = function(){
+        if (this.canMoveDown()){
+            this.row = this.row + 1;
+            for (var i = 0; i < this.data.length; i++) {
+                for (var j = 0; j < this.data[0].length; j++) {
+                    if (this.data[i][j] != null){
+                        this.data[i][j].moveDown();
+                    }
+                };
+            };
+        }
+        else {
+            this.addToBoard();
+            this.tetrix.createBrick();
+            this.tetrix.board.checkFullLines();
+            this.tetrix.board.draw();
+            
+        }
+    }
+
+    this.addToBoard = function(){
+        for (var i = 0; i < this.data.length; i++) {
+            for (var j = 0; j < this.data[0].length; j++) {
+                if (this.data[i][j] != null){
+                    this.tetrix.board.data[this.row + i][this.col + j] = this.data[i][j];
+                }
+            };
+        };
+    }
+
+    this.update = function(){
+        this.fall();
+    }
+    
+}
+var board = function(tetrix, x, y, width, height){
+    this.tetrix = tetrix;
+    this.numRows = 20;
+    this.numCols = 10;
+    this.data = [[]];
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.pieceSize = Math.ceil(this.width / this.numCols);
+    
+    this.init = function(){
+        this.createData();
+    }
+    
+    this.createData = function(){
+        for (var row = 0; row < this.numRows + 4; row++){
+            this.data[row] = [];
+            for (col = 0; col < this.numCols; col++){
+                this.data[row][col] = null;
+            }
+        }
+
+    }
+
+    this.draw = function(){
+        this.tetrix.ctx.fillStyle = "#ebebeb";
+        this.tetrix.ctx.fillRect(this.x, this.y, this.width,this.height);
+        this.drawAllsquares();
+    }
+
+    this.drawAllsquares = function(){
+        for (var row = 4; row < this.numRows + 4; row++){
+            for (var col = 0; col < this.numCols; col++){
+                if (this.data[row][col] != null){
+                    this.data[row][col].draw();
+                }
+            }
+        }
+    }
+
+    this.removeLine = function(lineNumber){
+        for (var i = lineNumber; i > 0; i--){
+            this.data[i] = this.data[i - 1];
+            for (j = 0; j < this.numCols; j++){
+                if (this.data[i][j] != null){
+                    this.data[i][j].moveDown();
+                }
+            }
+        }
+    }
+
+    this.checkFullLines = function(){
+        for (var i = 0; i < this.data.length; i++){
+            if (this.isFullLine(i)){
+                console.log('full');
+                this.removeLine(i);
+            }
+        }
+    }
+
+    this.isFullLine = function(lineNumber){
+        var full = true;
+        for (var i = 0; i < this.numCols; i++){
+            if (this.data[lineNumber][i] == null){
+                full = false;
+            }
+        }
+        return full;
+    }
+}
+var score = function(tetrix, x, y){
+    this.score = 0;
+    this.tetrix = tetrix;
+    this.x = x;
+    this.y = y;
+
+    this.draw = function(){
+        this.tetrix.ctx.font = "30px Arial";
+        this.tetrix.ctx.fillText("Diem: " + this.score, this.x, this.y);
+    }
+
+    this.setScore = function(score){
+        this.score = score;
+    }
+}
+var tetrix = function(){
+    this.canvas = null;
+    this.ctx = null;
+    this.board = null;
+    this.brick = null;
+    
+    this.score = null;
+    this.gameSize = 100;
+    
+    this.init = function(){
+        this.getGameSize();
+        this.createCanvas();
+        this.createBoard();
+        this.createBrick();
+        this.score = new score(this);
+        //this.fullScreen();
+    }
+    
+    this.createBoard = function(){
+        this.board = new board(this, 100, 100, 200, 400);
+        this.board.init();
+    }
+    
+    this.getGameSize = function(){
+        this.gameSize = window.innerHeight;
+        if (this.gameSize < window.innerWidth){
+            this.gameSize = window.innerWidth;
+        }
+    }
+    
+    this.createCanvas = function(){
+        this.canvas = document.createElement('canvas');
+        this.canvas.width = this.gameSize / 2;
+        this.canvas.height = this.gameSize;
+        this.ctx = this.canvas.getContext('2d');
+        document.body.appendChild(this.canvas);
+    }
+    
+    this.createBrick = function(){
+        this.brick = new brick(this);
+        this.brick.createData();
+    }
+
+
+
+    this.fullScreen = function(){
+        if (this.canvas.requestFullscreen) {
+        	this.canvas.requestFullscreen();
+        } else if (this.canvas.webkitRequestFullscreen) {
+        	this.canvas.webkitRequestFullscreen();
+        } else if (i.mozRequestFullScreen) {
+        	this.canvas.mozRequestFullScreen();
+        } else if (this.canvas.msRequestFullscreen) {
+        	this.canvas.msRequestFullscreen();
+        }
+    }
+    
+    this.start = function(){
+        
+    }
+    this.loop = function(){
+        this.board.draw();
+        this.brick.update();
+        this.brick.draw();
+    }
+
+    this.moveLeft = function(){
+        this.brick.moveLeft();
+    }
+
+    this.moveRight = function(){
+        this.brick.moveRight();
+    }
+
+    this.rotate = function(){
+        this.brick.rotate();
+    }
+}
+
+
+var game = new tetrix();
+function play(){
+    game.init();
+    setInterval(loop, 300);
+}
+function loop(){
+    game.loop();
+}
+function moveLeft(){
+    game.moveLeft();
+}
+function moveRight(){
+    game.moveRight();
+}
+function rotate(){
+    game.rotate();
+}
+</script>
+
+<br />
+<button onclick="play();">Play</button>
+<button onclick="moveLeft();">trai</button>
+<button onclick="moveRight();">phai</button>
+<button onclick="rotate();">xoay</button>
+</html>
